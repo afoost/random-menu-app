@@ -604,6 +604,101 @@
         .container {
             position: relative;
         }
+
+        /* 搜索页 */
+        .search-page {
+            text-align: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+        }
+
+        .search-results {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .search-result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .search-result-item:hover {
+            background: #f0f2ff;
+            transform: translateX(5px);
+        }
+
+        .search-result-item .dish-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .search-result-item .dish-links {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-result-item .dish-links a {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            text-decoration: none;
+        }
+
+        .quick-search {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .quick-search h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        .quick-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .quick-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -633,6 +728,7 @@
             </div>
 
             <button class="btn btn-secondary" style="margin-top: 30px;" onclick="goToHistory()">📜 查看历史记录</button>
+            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goToSearch()">🔍 搜索菜谱</button>
         </div>
 
         <!-- 食材选择页 -->
@@ -743,6 +839,35 @@
         <div id="historyPage" class="hidden history-page">
             <h2>📜 最近7天菜谱</h2>
             <div id="historyList"></div>
+            <button class="btn-back" onclick="goHome()" style="display: block; margin: 20px auto 0;">← 返回首页</button>
+        </div>
+
+        <!-- 搜索页 -->
+        <div id="searchPage" class="hidden search-page">
+            <h2>🔍 搜索菜谱</h2>
+            <p class="subtitle">输入菜名，查看做法视频</p>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="输入菜名，如：红烧肉、宫保鸡丁..." onkeypress="handleSearchKeyPress(event)">
+                <button class="btn" onclick="searchRecipe()">🔍 搜索</button>
+            </div>
+            
+            <div class="search-results" id="searchResults"></div>
+            
+            <div class="quick-search">
+                <h3>🔥 热门搜索</h3>
+                <div class="quick-tags">
+                    <span class="quick-tag" onclick="quickSearch('红烧肉')">红烧肉</span>
+                    <span class="quick-tag" onclick="quickSearch('宫保鸡丁')">宫保鸡丁</span>
+                    <span class="quick-tag" onclick="quickSearch('麻婆豆腐')">麻婆豆腐</span>
+                    <span class="quick-tag" onclick="quickSearch('糖醋排骨')">糖醋排骨</span>
+                    <span class="quick-tag" onclick="quickSearch('水煮鱼')">水煮鱼</span>
+                    <span class="quick-tag" onclick="quickSearch('回锅肉')">回锅肉</span>
+                    <span class="quick-tag" onclick="quickSearch('鱼香肉丝')">鱼香肉丝</span>
+                    <span class="quick-tag" onclick="quickSearch('小笼包')">小笼包</span>
+                </div>
+            </div>
+            
             <button class="btn-back" onclick="goHome()" style="display: block; margin: 20px auto 0;">← 返回首页</button>
         </div>
     </div>
@@ -1374,6 +1499,7 @@
             document.getElementById('ingredientPage').classList.add('hidden');
             document.getElementById('rollPage').classList.add('hidden');
             document.getElementById('historyPage').classList.add('hidden');
+            document.getElementById('searchPage').classList.add('hidden');
             document.getElementById('historyNavBtn').classList.add('hidden');
             document.getElementById('backNavBtn').classList.add('hidden');
             currentMeal = null;
@@ -1468,6 +1594,91 @@
                 history = [];
                 localStorage.setItem('randomHistory', JSON.stringify(history));
                 renderHistoryPage();
+            }
+        }
+
+        // 搜索页
+        function goToSearch() {
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('ingredientPage').classList.add('hidden');
+            document.getElementById('rollPage').classList.add('hidden');
+            document.getElementById('historyPage').classList.add('hidden');
+            document.getElementById('searchPage').classList.remove('hidden');
+            document.getElementById('historyNavBtn').classList.add('hidden');
+            document.getElementById('backNavBtn').classList.remove('hidden');
+            document.getElementById('searchInput').focus();
+        }
+
+        // 搜索菜谱
+        function searchRecipe() {
+            const input = document.getElementById('searchInput');
+            const query = input.value.trim();
+            
+            if (!query) {
+                document.getElementById('searchResults').innerHTML = '<p style="color: #888; text-align: center;">请输入菜名</p>';
+                return;
+            }
+            
+            // 搜索所有菜品
+            const allDishes = [
+                ...dishData.breakfast,
+                ...dishData.lunch,
+                ...dishData.dinner
+            ];
+            
+            // 模糊匹配
+            const results = allDishes.filter(dish => 
+                dish.name.includes(query) || query.includes(dish.name)
+            );
+            
+            // 去重
+            const uniqueResults = [];
+            const seen = new Set();
+            results.forEach(dish => {
+                if (!seen.has(dish.name)) {
+                    seen.add(dish.name);
+                    uniqueResults.push(dish);
+                }
+            });
+            
+            const container = document.getElementById('searchResults');
+            
+            if (uniqueResults.length === 0) {
+                // 没有匹配结果，提供外部搜索链接
+                container.innerHTML = `
+                    <div class="search-result-item">
+                        <div class="dish-name">没有找到 "${query}"</div>
+                        <p style="color: #888; margin: 10px 0;">试试外部搜索：</p>
+                        <div class="dish-links">
+                            <a href="https://search.bilibili.com/all?keyword=${encodeURIComponent(query + ' 做法')}" target="_blank" class="video-link bilibili">📺 B站搜索</a>
+                            <a href="https://www.xiachufang.com/search/?keyword=${encodeURIComponent(query)}" target="_blank" class="video-link xiachufang">📖 下厨房</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = uniqueResults.map(dish => `
+                    <div class="search-result-item">
+                        <div class="dish-name">${dish.name}</div>
+                        ${dish.ingredients.length > 0 ? `<p style="color: #888; margin: 5px 0; font-size: 0.85em;">食材：${dish.ingredients.join('、')}</p>` : ''}
+                        <div class="dish-links">
+                            <a href="https://search.bilibili.com/all?keyword=${encodeURIComponent(dish.name + ' 做法')}" target="_blank" class="video-link bilibili">📺 B站视频</a>
+                            <a href="https://www.xiachufang.com/search/?keyword=${encodeURIComponent(dish.name)}" target="_blank" class="video-link xiachufang">📖 下厨房</a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 快速搜索
+        function quickSearch(dishName) {
+            document.getElementById('searchInput').value = dishName;
+            searchRecipe();
+        }
+
+        // 搜索回车
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchRecipe();
             }
         }
 
