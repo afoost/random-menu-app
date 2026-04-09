@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff6b6b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="随机菜单">
+    <link rel="manifest" href="manifest.json">
+    <title>今天吃什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        /* 首页餐型选择 */
+        .meal-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .meal-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .meal-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .meal-btn:active {
+            transform: translateY(0);
+        }
+
+        .meal-btn .emoji {
+            font-size: 1.5em;
+        }
+
+        /* 食材选择页 */
+        .ingredient-section {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .ingredient-section h3 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ingredient-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ingredient-tag {
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            position: relative;
+        }
+
+        .ingredient-tag:hover {
+            background: #e8e8e8;
+        }
+
+        .ingredient-tag.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ingredient-tag .delete-btn {
+            display: none;
+            margin-left: 5px;
+            color: #e74c3c;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .ingredient-tag:hover .delete-btn {
+            display: inline;
+        }
+
+        .ingredient-tag.selected .delete-btn {
+            color: #ffcccc;
+        }
+
+        .add-ingredient {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .add-ingredient input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.85em;
+            outline: none;
+        }
+
+        .add-ingredient input:focus {
+            border-color: #667eea;
+        }
+
+        .add-ingredient button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .selected-count {
+            color: #667eea;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 30px;
+            font-size: 0.9em;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-back {
+            background: transparent;
+            color: #888;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-back:hover {
+            color: #667eea;
+        }
+
+        /* 随机页面 */
+        .result {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .result.rolling {
+            animation: shake 0.1s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .result-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .result-clickable:hover {
+            background: #f0f2ff;
+        }
+
+        .result-clickable::after {
+            content: '🎬';
+            font-size: 0.4em;
+            margin-left: 10px;
+            opacity: 0.6;
+        }
+
+        .result-hint {
+            font-size: 0.75em;
+            color: #aaa;
+            margin-top: -20px;
+            margin-bottom: 20px;
+        }
+
+        .filtered-info {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .filtered-info strong {
+            color: #667eea;
+        }
+
+        .dish-match-info {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.85em;
+        }
+
+        .dish-match-info .dish-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .dish-match-info .match-label {
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .dish-match-info .ingredient-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .dish-match-info .ingredient-tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .dish-match-info .ingredient-tag.have {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .dish-match-info .ingredient-tag.missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .dish-match-info .match-score {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #e0e0e0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .menu-list {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .menu-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .tag .remove {
+            margin-left: 5px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .tag .remove:hover {
+            color: #e74c3c;
+        }
+
+        .add-menu {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-menu input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 0.9em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .add-menu input:focus {
+            border-color: #667eea;
+        }
+
+        .add-menu button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .history {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .history h3 {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .history-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f0f2ff;
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .meal-title {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .no-result {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin: 20px 0;
+        }
+
+        /* 视频链接按钮 */
+        .video-links {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .video-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .video-link.bilibili {
+            background: #fb7299;
+            color: white;
+        }
+
+        .video-link.xiachufang {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .video-link.xiaochufang {
+            background: #ffa502;
+            color: white;
+        }
+
+        .video-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .skip-ingredient {
+            color: #aaa;
+            font-size: 0.85em;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .skip-ingredient:hover {
+            color: #667eea;
+        }
+
+        /* 历史记录页 */
+        .history-page {
+            text-align: left;
+        }
+
+        .history-page h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .history-day {
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .history-day-header {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .history-day-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-day-item {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-day-item:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .history-day-item .meal-label {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-right: 5px;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #aaa;
+            padding: 40px 0;
+        }
+
+        .clear-history-btn {
+            background: #f8f9fa;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 20px;
+        }
+
+        .clear-history-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航按钮 -->
+        <button class="nav-btn hidden" id="historyNavBtn" onclick="goToHistory()">📜 历史记录</button>
+        <button class="nav-btn hidden" id="backNavBtn" onclick="goHome()">← 返回</button>
+
+        <!-- 首页：选择餐型 -->
+        <div id="homePage">
+            <h1>🍽️ 今天吃什么？</h1>
+            <p class="subtitle">先选一顿，再让命运决定</p>
+            
+            <div class="meal-selection">
+                <button class="meal-btn" onclick="selectMeal('breakfast')">
+                    <span class="emoji">🌅</span>
+                    <span>早餐</span>
+                </button>
+                <button class="meal-btn" onclick="selectMeal('lunch')">
+                    <span class="emoji">☀️</span>
+                    <span>中餐</span>
+                </button>
+                <button class="meal-btn" onclick="selectMeal('dinner')">
+                    <span class="emoji">🌙</span>
+                    <span>晚餐</span>
+                </button>
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 30px;" onclick="goToHistory()">📜 查看历史记录</button>
+        </div>
+
+        <!-- 食材选择页 -->
+        <div id="ingredientPage" class="hidden">
+            <p class="meal-title" id="ingredientMealTitle">🌅 早餐</p>
+            <h1>🥗 选食材</h1>
+            <p class="subtitle">勾选你现有的食材，缩小随机范围</p>
+
+            <div class="ingredient-section">
+                <h3>🥬 蔬菜类</h3>
+                <div class="ingredient-tags" id="vegetableTags"></div>
+                <div class="add-ingredient">
+                    <input type="text" id="newVegetable" placeholder="添加蔬菜..." onkeypress="handleAddIngredient(event, 'vegetables')">
+                    <button onclick="addIngredient('vegetables', 'newVegetable')">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-section">
+                <h3>🥩 肉蛋类</h3>
+                <div class="ingredient-tags" id="meatTags"></div>
+                <div class="add-ingredient">
+                    <input type="text" id="newMeat" placeholder="添加肉蛋..." onkeypress="handleAddIngredient(event, 'meat')">
+                    <button onclick="addIngredient('meat', 'newMeat')">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-section">
+                <h3>🍜 主食类</h3>
+                <div class="ingredient-tags" id="stapleTags"></div>
+                <div class="add-ingredient">
+                    <input type="text" id="newStaple" placeholder="添加主食..." onkeypress="handleAddIngredient(event, 'staple')">
+                    <button onclick="addIngredient('staple', 'newStaple')">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-section">
+                <h3>🧂 调料类</h3>
+                <div class="ingredient-tags" id="seasoningTags"></div>
+                <div class="add-ingredient">
+                    <input type="text" id="newSeasoning" placeholder="添加调料..." onkeypress="handleAddIngredient(event, 'seasoning')">
+                    <button onclick="addIngredient('seasoning', 'newSeasoning')">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-section">
+                <h3>🍳 厨具类</h3>
+                <div class="ingredient-tags" id="cookwareTags"></div>
+                <div class="add-ingredient">
+                    <input type="text" id="newCookware" placeholder="添加厨具..." onkeypress="handleAddIngredient(event, 'cookware')">
+                    <button onclick="addIngredient('cookware', 'newCookware')">+</button>
+                </div>
+            </div>
+
+            <p class="selected-count" id="selectedCount">已选择 0 种食材/厨具</p>
+
+            <button class="btn" id="startRollBtn" onclick="goToRoll()" disabled>🎲 开始随机</button>
+            <p class="skip-ingredient" onclick="skipIngredient()">跳过，直接随机 →</p>
+            <button class="btn-back" onclick="goHome()">← 返回选择餐型</button>
+        </div>
+
+        <!-- 随机页面 -->
+        <div id="rollPage" class="hidden">
+            <p class="meal-title" id="mealTitle">🌅 早餐</p>
+            <h1>🎲 随机选菜</h1>
+            <p class="subtitle">让命运来决定</p>
+
+            <div class="filtered-info" id="filteredInfo">
+                基于 <strong>0</strong> 种食材筛选，共 <strong>0</strong> 道菜可选
+            </div>
+
+            <div class="result" id="result">点击按钮开始</div>
+            <p class="result-hint hidden" id="resultHint">点击菜名查看做法视频</p>
+
+            <div class="dish-match-info hidden" id="dishMatchInfo">
+                <div class="dish-name" id="matchDishName"></div>
+                <div class="match-label">所需食材：</div>
+                <div class="ingredient-list" id="matchIngredientList"></div>
+                <div class="match-score" id="matchScore"></div>
+            </div>
+
+            <div class="video-links hidden" id="videoLinks">
+                <a href="#" class="video-link bilibili" id="bilibiliLink" target="_blank">📺 B站视频</a>
+                <a href="#" class="video-link xiachufang" id="xiachufangLink" target="_blank">📖 下厨房</a>
+            </div>
+
+            <button class="btn" id="rollBtn" onclick="roll()">🎲 随机选一个</button>
+            <br>
+            <button class="btn btn-secondary" onclick="toggleMenuList()">📝 编辑菜单</button>
+
+            <div class="menu-list hidden" id="menuList">
+                <h3>当前菜单（点击 × 删除）</h3>
+                <div class="tags" id="menuTags"></div>
+                <div class="add-menu">
+                    <input type="text" id="newItem" placeholder="添加新菜品..." onkeypress="handleKeyPress(event)">
+                    <button onclick="addMenuItem()">添加</button>
+                </div>
+            </div>
+
+            <div class="history" id="historySection">
+                <h3>📜 今日已选（点击查看做法）</h3>
+                <div class="history-items" id="historyItems"></div>
+            </div>
+
+            <button class="btn-back" onclick="goToIngredient()">← 重新选食材</button>
+        </div>
+
+        <!-- 历史记录页 -->
+        <div id="historyPage" class="hidden history-page">
+            <h2>📜 最近7天菜谱</h2>
+            <div id="historyList"></div>
+            <button class="btn-back" onclick="goHome()" style="display: block; margin: 20px auto 0;">← 返回首页</button>
+        </div>
+    </div>
+
+    <script>
+        // 食材分类
+        const ingredients = {
+            vegetables: ['土豆', '胡萝卜', '番茄', '黄瓜', '茄子', '青椒', '洋葱', '白菜', '包菜', '花菜', '西兰花', '芹菜', '莴笋', '豆角', '冬瓜', '南瓜', '丝瓜', '菌菇', '豆腐', '豆芽', '韭菜', '菠菜', '生菜', '大葱', '蒜苗'],
+            meat: ['猪肉', '牛肉', '鸡肉', '鸡翅', '排骨', '五花肉', '里脊肉', '鸡蛋', '鸭蛋', '虾', '鱼', '五花肉', '午餐肉', '香肠', '腊肠', '肉末'],
+            staple: ['米饭', '面条', '粉丝', '米粉', '饺子皮', '馄饨皮', '面粉', '馒头', '面包'],
+            seasoning: ['酱油', '醋', '料酒', '蚝油', '豆瓣酱', '番茄酱', '辣椒酱', '芝麻酱', '蒜', '姜', '葱', '辣椒', '花椒', '八角', '桂皮']
+        };
+
+        // 厨具分类
+        const cookware = ['炒锅', '蒸锅', '电饭煲', '平底锅', '砂锅', '空气炸锅', '烤箱', '微波炉', '电饼铛', '高压锅', '汤锅', '炖锅'];
+
+        // 菜品数据：包含所需食材
+        const dishData = {
+            breakfast: [
+                { name: '豆浆油条', ingredients: ['面粉', '黄豆'] },
+                { name: '小笼包', ingredients: ['面粉', '猪肉'] },
+                { name: '煎饼果子', ingredients: ['面粉', '鸡蛋', '大葱'] },
+                { name: '肉夹馍', ingredients: ['面粉', '猪肉'] },
+                { name: '热干面', ingredients: ['面条', '芝麻酱', '大葱'] },
+                { name: '牛肉面', ingredients: ['面条', '牛肉', '大葱'] },
+                { name: '馄饨', ingredients: ['馄饨皮', '猪肉', '大葱'] },
+                { name: '饺子', ingredients: ['饺子皮', '猪肉', '白菜'] },
+                { name: '包子', ingredients: ['面粉', '猪肉', '大葱'] },
+                { name: '烧麦', ingredients: ['面粉', '猪肉', '糯米'] },
+                { name: '肠粉', ingredients: ['米粉', '鸡蛋'] },
+                { name: '蛋挞', ingredients: ['鸡蛋', '面粉'] },
+                { name: '茶叶蛋', ingredients: ['鸡蛋'] },
+                { name: '皮蛋瘦肉粥', ingredients: ['大米', '猪肉', '鸡蛋'] },
+                { name: '手抓饼', ingredients: ['面粉', '鸡蛋', '大葱'] },
+                { name: '葱油饼', ingredients: ['面粉', '大葱'] },
+                { name: '鸡蛋灌饼', ingredients: ['面粉', '鸡蛋', '大葱'] },
+                { name: '豆腐脑', ingredients: ['豆腐', '大葱'] },
+                { name: '胡辣汤', ingredients: ['面粉', '牛肉', '豆腐'] },
+                { name: '米线', ingredients: ['米粉', '猪肉', '大葱'] },
+                { name: '三明治', ingredients: ['面包', '鸡蛋', '生菜'] },
+                { name: '生煎包', ingredients: ['面粉', '猪肉', '大葱'] },
+                { name: '锅贴', ingredients: ['面粉', '猪肉', '大葱'] },
+                { name: '油条', ingredients: ['面粉'] },
+                { name: '豆浆', ingredients: ['黄豆'] }
+            ],
+            lunch: [
+                // 肉类主菜
+                { name: '红烧肉', ingredients: ['五花肉', '大葱', '姜'] },
+                { name: '糖醋排骨', ingredients: ['排骨', '醋', '酱油'] },
+                { name: '回锅肉', ingredients: ['五花肉', '青椒', '蒜苗'] },
+                { name: '红烧排骨', ingredients: ['排骨', '酱油', '姜'] },
+                { name: '粉蒸肉', ingredients: ['五花肉', '米粉', '土豆'] },
+                { name: '梅菜扣肉', ingredients: ['五花肉', '梅菜'] },
+                { name: '东坡肉', ingredients: ['五花肉', '酱油', '黄酒'] },
+                { name: '蒜泥白肉', ingredients: ['五花肉', '蒜', '酱油'] },
+                { name: '红烧狮子头', ingredients: ['猪肉', '鸡蛋', '大葱'] },
+                { name: '糖醋里脊', ingredients: ['里脊肉', '醋', '番茄酱'] },
+                { name: '锅包肉', ingredients: ['里脊肉', '醋', '胡萝卜'] },
+                { name: '京酱肉丝', ingredients: ['里脊肉', '甜面酱', '大葱'] },
+                { name: '鱼香肉丝', ingredients: ['猪肉', '胡萝卜', '木耳'] },
+                { name: '青椒肉丝', ingredients: ['青椒', '猪肉'] },
+                { name: '蒜苔炒肉', ingredients: ['蒜苔', '猪肉'] },
+                { name: '豆角炒肉', ingredients: ['豆角', '猪肉'] },
+                { name: '芹菜炒肉', ingredients: ['芹菜', '猪肉'] },
+                { name: '洋葱炒肉', ingredients: ['洋葱', '猪肉'] },
+                { name: '木耳炒肉', ingredients: ['木耳', '猪肉'] },
+                { name: '腐竹炒肉', ingredients: ['腐竹', '猪肉'] },
+                { name: '香菇炒肉', ingredients: ['香菇', '猪肉'] },
+                { name: '土豆烧牛肉', ingredients: ['牛肉', '土豆', '胡萝卜'] },
+                { name: '红烧牛腩', ingredients: ['牛腩', '土豆', '胡萝卜'] },
+                { name: '葱爆牛肉', ingredients: ['牛肉', '大葱'] },
+                { name: '水煮牛肉', ingredients: ['牛肉', '豆芽', '辣椒'] },
+                // 鸡肉类
+                { name: '宫保鸡丁', ingredients: ['鸡肉', '花生', '辣椒', '大葱'] },
+                { name: '辣子鸡', ingredients: ['鸡肉', '辣椒'] },
+                { name: '黄焖鸡', ingredients: ['鸡肉', '土豆', '青椒'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] },
+                { name: '白切鸡', ingredients: ['鸡肉', '姜', '大葱'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] },
+                { name: '可乐鸡翅', ingredients: ['鸡翅', '可乐'] },
+                { name: '红烧鸡翅', ingredients: ['鸡翅', '酱油', '姜'] },
+                { name: '奥尔良烤翅', ingredients: ['鸡翅', '奥尔良腌料'] },
+                { name: '咖喱鸡', ingredients: ['鸡肉', '土豆', '咖喱'] },
+                { name: '大盘鸡', ingredients: ['鸡肉', '土豆', '青椒'] },
+                { name: '小鸡炖蘑菇', ingredients: ['鸡肉', '蘑菇', '土豆'] },
+                { name: '椰子鸡', ingredients: ['鸡肉', '椰子'] },
+                { name: '香菇滑鸡', ingredients: ['鸡肉', '香菇'] },
+                { name: '板栗烧鸡', ingredients: ['鸡肉', '板栗'] },
+                // 鱼虾类
+                { name: '水煮鱼', ingredients: ['鱼', '豆芽', '辣椒'] },
+                { name: '酸菜鱼', ingredients: ['鱼', '酸菜', '辣椒'] },
+                { name: '红烧鱼', ingredients: ['鱼', '酱油', '姜'] },
+                { name: '清蒸鱼', ingredients: ['鱼', '姜', '大葱'] },
+                { name: '糖醋鱼', ingredients: ['鱼', '醋', '番茄酱'] },
+                { name: '剁椒鱼头', ingredients: ['鱼头', '剁椒'] },
+                { name: '松鼠鱼', ingredients: ['鱼', '番茄酱', '醋'] },
+                { name: '烤鱼', ingredients: ['鱼', '豆芽', '辣椒'] },
+                { name: '油焖大虾', ingredients: ['虾', '酱油', '姜'] },
+                { name: '白灼虾', ingredients: ['虾', '姜'] },
+                { name: '蒜蓉虾', ingredients: ['虾', '蒜'] },
+                { name: '椒盐虾', ingredients: ['虾', '椒盐'] },
+                { name: '红烧带鱼', ingredients: ['带鱼', '酱油', '姜'] },
+                { name: '干煎带鱼', ingredients: ['带鱼', '姜'] },
+                // 蛋类
+                { name: '番茄炒蛋', ingredients: ['番茄', '鸡蛋'] },
+                { name: '韭菜炒蛋', ingredients: ['韭菜', '鸡蛋'] },
+                { name: '葱花炒蛋', ingredients: ['大葱', '鸡蛋'] },
+                { name: '黄瓜炒蛋', ingredients: ['黄瓜', '鸡蛋'] },
+                { name: '苦瓜炒蛋', ingredients: ['苦瓜', '鸡蛋'] },
+                { name: '青椒炒蛋', ingredients: ['青椒', '鸡蛋'] },
+                { name: '洋葱炒蛋', ingredients: ['洋葱', '鸡蛋'] },
+                { name: '蒸蛋羹', ingredients: ['鸡蛋'] },
+                { name: '茶叶蛋', ingredients: ['鸡蛋', '茶叶'] },
+                { name: '虎皮鸡蛋', ingredients: ['鸡蛋', '酱油'] },
+                // 豆腐类
+                { name: '麻婆豆腐', ingredients: ['豆腐', '猪肉', '辣椒'] },
+                { name: '红烧豆腐', ingredients: ['豆腐', '酱油'] },
+                { name: '家常豆腐', ingredients: ['豆腐', '猪肉', '青椒'] },
+                { name: '铁板豆腐', ingredients: ['豆腐', '洋葱'] },
+                { name: '锅塌豆腐', ingredients: ['豆腐', '鸡蛋'] },
+                { name: '豆腐煲', ingredients: ['豆腐', '菌菇', '虾'] },
+                { name: '皮蛋豆腐', ingredients: ['豆腐', '皮蛋'] },
+                { name: '肉末豆腐', ingredients: ['豆腐', '猪肉'] },
+                // 蔬菜类
+                { name: '酸辣土豆丝', ingredients: ['土豆', '辣椒', '醋'] },
+                { name: '醋溜土豆丝', ingredients: ['土豆', '醋'] },
+                { name: '干锅土豆片', ingredients: ['土豆', '辣椒'] },
+                { name: '地三鲜', ingredients: ['土豆', '茄子', '青椒'] },
+                { name: '红烧茄子', ingredients: ['茄子', '蒜'] },
+                { name: '鱼香茄子', ingredients: ['茄子', '猪肉'] },
+                { name: '蒜蓉茄子', ingredients: ['茄子', '蒜'] },
+                { name: '干煸豆角', ingredients: ['豆角', '辣椒'] },
+                { name: '干锅花菜', ingredients: ['花菜', '辣椒'] },
+                { name: '蒜蓉西兰花', ingredients: ['西兰花', '蒜'] },
+                { name: '清炒时蔬', ingredients: ['青菜'] },
+                { name: '蒜蓉油麦菜', ingredients: ['油麦菜', '蒜'] },
+                { name: '蚝油生菜', ingredients: ['生菜', '蚝油'] },
+                { name: '清炒菠菜', ingredients: ['菠菜', '蒜'] },
+                { name: '手撕包菜', ingredients: ['包菜', '辣椒'] },
+                { name: '醋溜白菜', ingredients: ['白菜', '醋'] },
+                { name: '干锅包菜', ingredients: ['包菜', '五花肉'] },
+                { name: '清炒荷兰豆', ingredients: ['荷兰豆', '蒜'] },
+                { name: '蒜蓉空心菜', ingredients: ['空心菜', '蒜'] },
+                { name: '清炒丝瓜', ingredients: ['丝瓜', '蒜'] },
+                { name: '冬瓜排骨汤', ingredients: ['冬瓜', '排骨'] },
+                { name: '番茄蛋汤', ingredients: ['番茄', '鸡蛋'] },
+                { name: '紫菜蛋花汤', ingredients: ['紫菜', '鸡蛋'] },
+                { name: '酸辣汤', ingredients: ['豆腐', '鸡蛋', '醋'] },
+                { name: '玉米排骨汤', ingredients: ['玉米', '排骨'] },
+                { name: '萝卜排骨汤', ingredients: ['萝卜', '排骨'] },
+                { name: '莲藕排骨汤', ingredients: ['莲藕', '排骨'] },
+                // 面食类
+                { name: '担担面', ingredients: ['面条', '猪肉', '花生'] },
+                { name: '炸酱面', ingredients: ['面条', '猪肉', '黄瓜'] },
+                { name: '兰州拉面', ingredients: ['面条', '牛肉', '大葱'] },
+                { name: '重庆小面', ingredients: ['面条', '辣椒'] },
+                { name: '热干面', ingredients: ['面条', '芝麻酱', '大葱'] },
+                { name: '葱油拌面', ingredients: ['面条', '大葱', '酱油'] },
+                { name: '阳春面', ingredients: ['面条', '大葱', '酱油'] },
+                { name: '牛肉面', ingredients: ['面条', '牛肉', '大葱'] },
+                { name: '西红柿鸡蛋面', ingredients: ['面条', '番茄', '鸡蛋'] },
+                { name: '炒面', ingredients: ['面条', '猪肉', '青菜'] },
+                { name: '焖面', ingredients: ['面条', '豆角', '猪肉'] },
+                { name: '凉皮', ingredients: ['凉皮', '黄瓜', '辣椒'] },
+                { name: '凉面', ingredients: ['面条', '黄瓜', '辣椒'] },
+                // 米饭类
+                { name: '蛋炒饭', ingredients: ['米饭', '鸡蛋', '大葱'] },
+                { name: '扬州炒饭', ingredients: ['米饭', '鸡蛋', '虾仁'] },
+                { name: '酱油炒饭', ingredients: ['米饭', '鸡蛋', '酱油'] },
+                { name: '盖浇饭', ingredients: ['米饭', '猪肉', '青椒'] },
+                { name: '煲仔饭', ingredients: ['米饭', '香肠', '鸡蛋'] },
+                { name: '卤肉饭', ingredients: ['米饭', '五花肉', '鸡蛋'] },
+                { name: '咖喱饭', ingredients: ['米饭', '鸡肉', '咖喱'] },
+                { name: '石锅拌饭', ingredients: ['米饭', '鸡蛋', '蔬菜'] },
+                // 其他
+                { name: '麻辣烫', ingredients: ['粉丝', '豆腐', '菌菇'] },
+                { name: '冒菜', ingredients: ['粉丝', '午餐肉', '豆芽'] },
+                { name: '毛血旺', ingredients: ['鸭血', '豆芽', '午餐肉'] },
+                { name: '夫妻肺片', ingredients: ['牛肉', '辣椒'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] }
+            ],
+            dinner: [
+                // 肉类主菜
+                { name: '红烧肉', ingredients: ['五花肉', '大葱', '姜'] },
+                { name: '糖醋排骨', ingredients: ['排骨', '醋', '酱油'] },
+                { name: '回锅肉', ingredients: ['五花肉', '青椒', '蒜苗'] },
+                { name: '红烧排骨', ingredients: ['排骨', '酱油', '姜'] },
+                { name: '粉蒸肉', ingredients: ['五花肉', '米粉', '土豆'] },
+                { name: '梅菜扣肉', ingredients: ['五花肉', '梅菜'] },
+                { name: '东坡肉', ingredients: ['五花肉', '酱油', '黄酒'] },
+                { name: '蒜泥白肉', ingredients: ['五花肉', '蒜', '酱油'] },
+                { name: '红烧狮子头', ingredients: ['猪肉', '鸡蛋', '大葱'] },
+                { name: '糖醋里脊', ingredients: ['里脊肉', '醋', '番茄酱'] },
+                { name: '锅包肉', ingredients: ['里脊肉', '醋', '胡萝卜'] },
+                { name: '京酱肉丝', ingredients: ['里脊肉', '甜面酱', '大葱'] },
+                { name: '鱼香肉丝', ingredients: ['猪肉', '胡萝卜', '木耳'] },
+                { name: '青椒肉丝', ingredients: ['青椒', '猪肉'] },
+                { name: '蒜苔炒肉', ingredients: ['蒜苔', '猪肉'] },
+                { name: '豆角炒肉', ingredients: ['豆角', '猪肉'] },
+                { name: '芹菜炒肉', ingredients: ['芹菜', '猪肉'] },
+                { name: '洋葱炒肉', ingredients: ['洋葱', '猪肉'] },
+                { name: '木耳炒肉', ingredients: ['木耳', '猪肉'] },
+                { name: '腐竹炒肉', ingredients: ['腐竹', '猪肉'] },
+                { name: '香菇炒肉', ingredients: ['香菇', '猪肉'] },
+                { name: '土豆烧牛肉', ingredients: ['牛肉', '土豆', '胡萝卜'] },
+                { name: '红烧牛腩', ingredients: ['牛腩', '土豆', '胡萝卜'] },
+                { name: '葱爆牛肉', ingredients: ['牛肉', '大葱'] },
+                { name: '水煮牛肉', ingredients: ['牛肉', '豆芽', '辣椒'] },
+                // 鸡肉类
+                { name: '宫保鸡丁', ingredients: ['鸡肉', '花生', '辣椒', '大葱'] },
+                { name: '辣子鸡', ingredients: ['鸡肉', '辣椒'] },
+                { name: '黄焖鸡', ingredients: ['鸡肉', '土豆', '青椒'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] },
+                { name: '白切鸡', ingredients: ['鸡肉', '姜', '大葱'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] },
+                { name: '可乐鸡翅', ingredients: ['鸡翅', '可乐'] },
+                { name: '红烧鸡翅', ingredients: ['鸡翅', '酱油', '姜'] },
+                { name: '奥尔良烤翅', ingredients: ['鸡翅', '奥尔良腌料'] },
+                { name: '咖喱鸡', ingredients: ['鸡肉', '土豆', '咖喱'] },
+                { name: '大盘鸡', ingredients: ['鸡肉', '土豆', '青椒'] },
+                { name: '小鸡炖蘑菇', ingredients: ['鸡肉', '蘑菇', '土豆'] },
+                { name: '椰子鸡', ingredients: ['鸡肉', '椰子'] },
+                { name: '香菇滑鸡', ingredients: ['鸡肉', '香菇'] },
+                { name: '板栗烧鸡', ingredients: ['鸡肉', '板栗'] },
+                // 鱼虾类
+                { name: '水煮鱼', ingredients: ['鱼', '豆芽', '辣椒'] },
+                { name: '酸菜鱼', ingredients: ['鱼', '酸菜', '辣椒'] },
+                { name: '红烧鱼', ingredients: ['鱼', '酱油', '姜'] },
+                { name: '清蒸鱼', ingredients: ['鱼', '姜', '大葱'] },
+                { name: '糖醋鱼', ingredients: ['鱼', '醋', '番茄酱'] },
+                { name: '剁椒鱼头', ingredients: ['鱼头', '剁椒'] },
+                { name: '松鼠鱼', ingredients: ['鱼', '番茄酱', '醋'] },
+                { name: '烤鱼', ingredients: ['鱼', '豆芽', '辣椒'] },
+                { name: '油焖大虾', ingredients: ['虾', '酱油', '姜'] },
+                { name: '白灼虾', ingredients: ['虾', '姜'] },
+                { name: '蒜蓉虾', ingredients: ['虾', '蒜'] },
+                { name: '椒盐虾', ingredients: ['虾', '椒盐'] },
+                { name: '红烧带鱼', ingredients: ['带鱼', '酱油', '姜'] },
+                { name: '干煎带鱼', ingredients: ['带鱼', '姜'] },
+                // 蛋类
+                { name: '番茄炒蛋', ingredients: ['番茄', '鸡蛋'] },
+                { name: '韭菜炒蛋', ingredients: ['韭菜', '鸡蛋'] },
+                { name: '葱花炒蛋', ingredients: ['大葱', '鸡蛋'] },
+                { name: '黄瓜炒蛋', ingredients: ['黄瓜', '鸡蛋'] },
+                { name: '苦瓜炒蛋', ingredients: ['苦瓜', '鸡蛋'] },
+                { name: '青椒炒蛋', ingredients: ['青椒', '鸡蛋'] },
+                { name: '洋葱炒蛋', ingredients: ['洋葱', '鸡蛋'] },
+                { name: '蒸蛋羹', ingredients: ['鸡蛋'] },
+                { name: '茶叶蛋', ingredients: ['鸡蛋', '茶叶'] },
+                { name: '虎皮鸡蛋', ingredients: ['鸡蛋', '酱油'] },
+                // 豆腐类
+                { name: '麻婆豆腐', ingredients: ['豆腐', '猪肉', '辣椒'] },
+                { name: '红烧豆腐', ingredients: ['豆腐', '酱油'] },
+                { name: '家常豆腐', ingredients: ['豆腐', '猪肉', '青椒'] },
+                { name: '铁板豆腐', ingredients: ['豆腐', '洋葱'] },
+                { name: '锅塌豆腐', ingredients: ['豆腐', '鸡蛋'] },
+                { name: '豆腐煲', ingredients: ['豆腐', '菌菇', '虾'] },
+                { name: '皮蛋豆腐', ingredients: ['豆腐', '皮蛋'] },
+                { name: '肉末豆腐', ingredients: ['豆腐', '猪肉'] },
+                // 蔬菜类
+                { name: '酸辣土豆丝', ingredients: ['土豆', '辣椒', '醋'] },
+                { name: '醋溜土豆丝', ingredients: ['土豆', '醋'] },
+                { name: '干锅土豆片', ingredients: ['土豆', '辣椒'] },
+                { name: '地三鲜', ingredients: ['土豆', '茄子', '青椒'] },
+                { name: '红烧茄子', ingredients: ['茄子', '蒜'] },
+                { name: '鱼香茄子', ingredients: ['茄子', '猪肉'] },
+                { name: '蒜蓉茄子', ingredients: ['茄子', '蒜'] },
+                { name: '干煸豆角', ingredients: ['豆角', '辣椒'] },
+                { name: '干锅花菜', ingredients: ['花菜', '辣椒'] },
+                { name: '蒜蓉西兰花', ingredients: ['西兰花', '蒜'] },
+                { name: '清炒时蔬', ingredients: ['青菜'] },
+                { name: '蒜蓉油麦菜', ingredients: ['油麦菜', '蒜'] },
+                { name: '蚝油生菜', ingredients: ['生菜', '蚝油'] },
+                { name: '清炒菠菜', ingredients: ['菠菜', '蒜'] },
+                { name: '手撕包菜', ingredients: ['包菜', '辣椒'] },
+                { name: '醋溜白菜', ingredients: ['白菜', '醋'] },
+                { name: '干锅包菜', ingredients: ['包菜', '五花肉'] },
+                { name: '清炒荷兰豆', ingredients: ['荷兰豆', '蒜'] },
+                { name: '蒜蓉空心菜', ingredients: ['空心菜', '蒜'] },
+                { name: '清炒丝瓜', ingredients: ['丝瓜', '蒜'] },
+                { name: '冬瓜排骨汤', ingredients: ['冬瓜', '排骨'] },
+                { name: '番茄蛋汤', ingredients: ['番茄', '鸡蛋'] },
+                { name: '紫菜蛋花汤', ingredients: ['紫菜', '鸡蛋'] },
+                { name: '酸辣汤', ingredients: ['豆腐', '鸡蛋', '醋'] },
+                { name: '玉米排骨汤', ingredients: ['玉米', '排骨'] },
+                { name: '萝卜排骨汤', ingredients: ['萝卜', '排骨'] },
+                { name: '莲藕排骨汤', ingredients: ['莲藕', '排骨'] },
+                // 面食类
+                { name: '担担面', ingredients: ['面条', '猪肉', '花生'] },
+                { name: '炸酱面', ingredients: ['面条', '猪肉', '黄瓜'] },
+                { name: '兰州拉面', ingredients: ['面条', '牛肉', '大葱'] },
+                { name: '重庆小面', ingredients: ['面条', '辣椒'] },
+                { name: '热干面', ingredients: ['面条', '芝麻酱', '大葱'] },
+                { name: '葱油拌面', ingredients: ['面条', '大葱', '酱油'] },
+                { name: '阳春面', ingredients: ['面条', '大葱', '酱油'] },
+                { name: '牛肉面', ingredients: ['面条', '牛肉', '大葱'] },
+                { name: '西红柿鸡蛋面', ingredients: ['面条', '番茄', '鸡蛋'] },
+                { name: '炒面', ingredients: ['面条', '猪肉', '青菜'] },
+                { name: '焖面', ingredients: ['面条', '豆角', '猪肉'] },
+                { name: '凉皮', ingredients: ['凉皮', '黄瓜', '辣椒'] },
+                { name: '凉面', ingredients: ['面条', '黄瓜', '辣椒'] },
+                // 米饭类
+                { name: '蛋炒饭', ingredients: ['米饭', '鸡蛋', '大葱'] },
+                { name: '扬州炒饭', ingredients: ['米饭', '鸡蛋', '虾仁'] },
+                { name: '酱油炒饭', ingredients: ['米饭', '鸡蛋', '酱油'] },
+                { name: '盖浇饭', ingredients: ['米饭', '猪肉', '青椒'] },
+                { name: '煲仔饭', ingredients: ['米饭', '香肠', '鸡蛋'] },
+                { name: '卤肉饭', ingredients: ['米饭', '五花肉', '鸡蛋'] },
+                { name: '咖喱饭', ingredients: ['米饭', '鸡肉', '咖喱'] },
+                { name: '石锅拌饭', ingredients: ['米饭', '鸡蛋', '蔬菜'] },
+                // 其他
+                { name: '麻辣烫', ingredients: ['粉丝', '豆腐', '菌菇'] },
+                { name: '冒菜', ingredients: ['粉丝', '午餐肉', '豆芽'] },
+                { name: '毛血旺', ingredients: ['鸭血', '豆芽', '午餐肉'] },
+                { name: '夫妻肺片', ingredients: ['牛肉', '辣椒'] },
+                { name: '口水鸡', ingredients: ['鸡肉', '辣椒', '花生'] }
+            ]
+        };
+
+        const mealNames = {
+            breakfast: '🌅 早餐',
+            lunch: '☀️ 中餐',
+            dinner: '🌙 晚餐'
+        };
+
+        // 状态
+        let currentMeal = null;
+        let selectedIngredients = new Set();
+        let filteredDishes = []; // 改为存储完整菜品对象
+        let filteredDishNames = []; // 菜品名称列表
+        let history = JSON.parse(localStorage.getItem('randomHistory')) || [];
+        let isRolling = false;
+        let currentDish = null;
+
+        // 初始化食材标签
+        function initIngredientTags() {
+            renderIngredientTags('vegetableTags', ingredients.vegetables, 'vegetables');
+            renderIngredientTags('meatTags', ingredients.meat, 'meat');
+            renderIngredientTags('stapleTags', ingredients.staple, 'staple');
+            renderIngredientTags('seasoningTags', ingredients.seasoning, 'seasoning');
+            renderIngredientTags('cookwareTags', cookware, 'cookware');
+        }
+
+        function renderIngredientTags(containerId, items, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.map(item => 
+                `<span class="ingredient-tag" onclick="toggleIngredient(this, '${item}')">${item}<span class="delete-btn" onclick="event.stopPropagation(); removeIngredient('${category}', '${item}')">×</span></span>`
+            ).join('');
+        }
+
+        function toggleIngredient(element, ingredient) {
+            if (selectedIngredients.has(ingredient)) {
+                selectedIngredients.delete(ingredient);
+                element.classList.remove('selected');
+            } else {
+                selectedIngredients.add(ingredient);
+                element.classList.add('selected');
+            }
+            updateSelectedCount();
+        }
+
+        function removeIngredient(category, item) {
+            if (category === 'cookware') {
+                const index = cookware.indexOf(item);
+                if (index > -1) cookware.splice(index, 1);
+                renderIngredientTags('cookwareTags', cookware, 'cookware');
+            } else {
+                const index = ingredients[category].indexOf(item);
+                if (index > -1) ingredients[category].splice(index, 1);
+                const containerMap = {
+                    vegetables: 'vegetableTags',
+                    meat: 'meatTags',
+                    staple: 'stapleTags',
+                    seasoning: 'seasoningTags'
+                };
+                renderIngredientTags(containerMap[category], ingredients[category], category);
+            }
+            // 如果已选中，从选中列表移除
+            if (selectedIngredients.has(item)) {
+                selectedIngredients.delete(item);
+                updateSelectedCount();
+            }
+            // 保存到localStorage
+            saveIngredients();
+        }
+
+        function addIngredient(category, inputId) {
+            const input = document.getElementById(inputId);
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            if (category === 'cookware') {
+                if (!cookware.includes(value)) {
+                    cookware.push(value);
+                    renderIngredientTags('cookwareTags', cookware, 'cookware');
+                }
+            } else {
+                if (!ingredients[category].includes(value)) {
+                    ingredients[category].push(value);
+                    const containerMap = {
+                        vegetables: 'vegetableTags',
+                        meat: 'meatTags',
+                        staple: 'stapleTags',
+                        seasoning: 'seasoningTags'
+                    };
+                    renderIngredientTags(containerMap[category], ingredients[category], category);
+                }
+            }
+            
+            input.value = '';
+            saveIngredients();
+        }
+
+        function handleAddIngredient(event, category) {
+            if (event.key === 'Enter') {
+                const inputMap = {
+                    vegetables: 'newVegetable',
+                    meat: 'newMeat',
+                    staple: 'newStaple',
+                    seasoning: 'newSeasoning',
+                    cookware: 'newCookware'
+                };
+                addIngredient(category, inputMap[category]);
+            }
+        }
+
+        function saveIngredients() {
+            localStorage.setItem('customIngredients', JSON.stringify(ingredients));
+            localStorage.setItem('customCookware', JSON.stringify(cookware));
+        }
+
+        function loadIngredients() {
+            const savedIngredients = localStorage.getItem('customIngredients');
+            const savedCookware = localStorage.getItem('customCookware');
+            
+            if (savedIngredients) {
+                const parsed = JSON.parse(savedIngredients);
+                Object.assign(ingredients, parsed);
+            }
+            if (savedCookware) {
+                const parsed = JSON.parse(savedCookware);
+                cookware.length = 0;
+                cookware.push(...parsed);
+            }
+        }
+
+        function updateSelectedCount() {
+            const selectedFoods = [...selectedIngredients].filter(item => !cookware.includes(item));
+            const selectedTools = [...selectedIngredients].filter(item => cookware.includes(item));
+            
+            let text = '';
+            if (selectedFoods.length > 0 && selectedTools.length > 0) {
+                text = `已选择 ${selectedFoods.length} 种食材、${selectedTools.length} 种厨具`;
+            } else if (selectedFoods.length > 0) {
+                text = `已选择 ${selectedFoods.length} 种食材`;
+            } else if (selectedTools.length > 0) {
+                text = `已选择 ${selectedTools.length} 种厨具`;
+            } else {
+                text = '已选择 0 种食材/厨具';
+            }
+            document.getElementById('selectedCount').textContent = text;
+            document.getElementById('startRollBtn').disabled = selectedIngredients.size === 0;
+        }
+
+        // 选择餐型
+        function selectMeal(meal) {
+            currentMeal = meal;
+            document.getElementById('ingredientMealTitle').textContent = mealNames[meal];
+            
+            // 重置食材选择
+            selectedIngredients.clear();
+            document.querySelectorAll('.ingredient-tag').forEach(tag => tag.classList.remove('selected'));
+            updateSelectedCount();
+            
+            // 切换页面
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('ingredientPage').classList.remove('hidden');
+            document.getElementById('historyNavBtn').classList.add('hidden');
+            document.getElementById('backNavBtn').classList.remove('hidden');
+        }
+
+        // 跳过食材选择
+        function skipIngredient() {
+            selectedIngredients.clear();
+            goToRoll();
+        }
+
+        // 进入随机页面
+        function goToRoll() {
+            // 根据食材筛选菜品
+            filterDishes();
+            
+            document.getElementById('mealTitle').textContent = mealNames[currentMeal];
+            document.getElementById('ingredientPage').classList.add('hidden');
+            document.getElementById('rollPage').classList.remove('hidden');
+            document.getElementById('historyNavBtn').classList.remove('hidden');
+            document.getElementById('backNavBtn').classList.add('hidden');
+            
+            // 分离食材和厨具
+            const selectedFoods = [...selectedIngredients].filter(item => !cookware.includes(item));
+            const selectedTools = [...selectedIngredients].filter(item => cookware.includes(item));
+            
+            // 更新筛选信息
+            const dishCount = filteredDishes.length;
+            let infoText = '';
+            if (selectedFoods.length > 0 && selectedTools.length > 0) {
+                infoText = `基于 <strong>${selectedFoods.length}</strong> 种食材、<strong>${selectedTools.length}</strong> 种厨具筛选，共 <strong>${dishCount}</strong> 道菜可选`;
+            } else if (selectedFoods.length > 0) {
+                infoText = `基于 <strong>${selectedFoods.length}</strong> 种食材筛选，共 <strong>${dishCount}</strong> 道菜可选`;
+            } else if (selectedTools.length > 0) {
+                infoText = `基于 <strong>${selectedTools.length}</strong> 种厨具筛选，共 <strong>${dishCount}</strong> 道菜可选`;
+            } else {
+                infoText = `未筛选，共 <strong>${dishCount}</strong> 道菜可选`;
+            }
+            document.getElementById('filteredInfo').innerHTML = infoText;
+            
+            if (dishCount === 0) {
+                document.getElementById('result').textContent = '没有匹配的菜';
+                document.getElementById('rollBtn').disabled = true;
+            } else {
+                document.getElementById('result').textContent = '点击按钮开始';
+                document.getElementById('rollBtn').disabled = false;
+            }
+            
+            document.getElementById('result').classList.remove('result-clickable');
+            document.getElementById('resultHint').classList.add('hidden');
+            document.getElementById('videoLinks').classList.add('hidden');
+            document.getElementById('dishMatchInfo').classList.add('hidden');
+            
+            renderMenuTags();
+            renderHistory();
+        }
+
+        // 根据菜品名称推断所需厨具
+        function inferCookware(dishName) {
+            const cookwareMap = {
+                '蒸锅': ['蒸蛋', '蒸鱼', '包子', '烧麦', '小笼包', '粉蒸肉', '梅菜扣肉'],
+                '电饭煲': ['米饭', '煲仔饭', '卤肉饭', '粥', '咖喱饭', '石锅拌饭'],
+                '平底锅': ['煎饼', '手抓饼', '葱油饼', '鸡蛋灌饼', '锅贴', '生煎包', '牛排', '煎饺'],
+                '砂锅': ['砂锅', '煲', '黄焖鸡', '豆腐煲'],
+                '空气炸锅': ['炸鸡', '奥尔良烤翅', '烤翅', '烤肉'],
+                '烤箱': ['烤鱼', '烤鸭', '烤鸡', '披萨', '蛋挞', '烤肉', '奥尔良烤翅'],
+                '微波炉': ['微波'],
+                '电饼铛': ['葱油饼', '手抓饼', '鸡蛋灌饼', '煎饼'],
+                '高压锅': ['红烧肉', '红烧牛腩', '卤肉', '东坡肉', '红烧排骨'],
+                '汤锅': ['汤', '火锅', '涮', '粥', '麻辣烫', '冒菜'],
+                '炖锅': ['炖', '煲汤', '小鸡炖蘑菇']
+            };
+            
+            const required = ['炒锅']; // 默认需要炒锅
+            
+            for (const [cookware, keywords] of Object.entries(cookwareMap)) {
+                if (keywords.some(kw => dishName.includes(kw))) {
+                    required.push(cookware);
+                }
+            }
+            
+            return required;
+        }
+
+        // 筛选菜品
+        function filterDishes() {
+            const allDishes = dishData[currentMeal];
+            
+            // 分离食材和厨具
+            const selectedFoods = new Set();
+            const selectedTools = new Set();
+            selectedIngredients.forEach(item => {
+                if (cookware.includes(item)) {
+                    selectedTools.add(item);
+                } else {
+                    selectedFoods.add(item);
+                }
+            });
+            
+            if (selectedFoods.size === 0 && selectedTools.size === 0) {
+                // 没有选择食材和厨具，显示所有菜品
+                filteredDishes = allDishes.map(d => ({
+                    ...d,
+                    matchedCount: 0,
+                    missingIngredients: [],
+                    matchScore: 0
+                }));
+                filteredDishNames = allDishes.map(d => d.name);
+            } else {
+                // 筛选并计算匹配度
+                filteredDishes = allDishes
+                    .map(dish => {
+                        // 计算匹配的食材
+                        const matchedIngredients = dish.ingredients.filter(ing => selectedFoods.has(ing));
+                        const missingIngredients = dish.ingredients.filter(ing => !selectedFoods.has(ing));
+                        
+                        // 匹配度 = 匹配的食材数 / 菜品所需食材数
+                        const matchScore = dish.ingredients.length > 0 
+                            ? matchedIngredients.length / dish.ingredients.length 
+                            : 0;
+                        
+                        return {
+                            ...dish,
+                            matchedCount: matchedIngredients.length,
+                            missingIngredients,
+                            matchScore
+                        };
+                    })
+                    .filter(dish => {
+                        // 食材匹配：必须全部匹配（匹配度100%）
+                        const foodMatch = selectedFoods.size === 0 || 
+                            dish.ingredients.length === 0 || 
+                            dish.matchScore === 1;
+                        
+                        // 厨具匹配：如果选择了厨具，菜品需要的厨具必须在选择中
+                        let toolMatch = true;
+                        if (selectedTools.size > 0) {
+                            const requiredTools = inferCookware(dish.name);
+                            toolMatch = requiredTools.every(t => selectedTools.has(t) || t === '炒锅');
+                        }
+                        
+                        return foodMatch && toolMatch;
+                    });
+                
+                filteredDishNames = filteredDishes.map(d => d.name);
+            }
+        }
+
+        // 返回首页
+        function goHome() {
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('ingredientPage').classList.add('hidden');
+            document.getElementById('rollPage').classList.add('hidden');
+            document.getElementById('historyPage').classList.add('hidden');
+            document.getElementById('historyNavBtn').classList.add('hidden');
+            document.getElementById('backNavBtn').classList.add('hidden');
+            currentMeal = null;
+            currentDish = null;
+        }
+
+        // 返回食材选择
+        function goToIngredient() {
+            document.getElementById('ingredientPage').classList.remove('hidden');
+            document.getElementById('rollPage').classList.add('hidden');
+            document.getElementById('menuList').classList.add('hidden');
+            document.getElementById('historyNavBtn').classList.add('hidden');
+            document.getElementById('backNavBtn').classList.remove('hidden');
+        }
+
+        // 历史记录页
+        function goToHistory() {
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('ingredientPage').classList.add('hidden');
+            document.getElementById('rollPage').classList.add('hidden');
+            document.getElementById('historyPage').classList.remove('hidden');
+            document.getElementById('historyNavBtn').classList.add('hidden');
+            document.getElementById('backNavBtn').classList.remove('hidden');
+            renderHistoryPage();
+        }
+
+        // 渲染历史记录页
+        function renderHistoryPage() {
+            const container = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="no-history">暂无历史记录</div>';
+                return;
+            }
+
+            // 按日期分组
+            const groupedByDate = {};
+            const today = new Date();
+            
+            history.forEach(item => {
+                if (!groupedByDate[item.date]) {
+                    groupedByDate[item.date] = [];
+                }
+                groupedByDate[item.date].push(item);
+            });
+
+            // 只显示最近7天
+            const dates = Object.keys(groupedByDate).slice(0, 7);
+            
+            if (dates.length === 0) {
+                container.innerHTML = '<div class="no-history">暂无历史记录</div>';
+                return;
+            }
+
+            let html = '';
+            dates.forEach(dateStr => {
+                const items = groupedByDate[dateStr];
+                const date = new Date(dateStr);
+                const isToday = dateStr === today.toDateString();
+                const isYesterday = dateStr === new Date(today - 86400000).toDateString();
+                
+                let displayDate;
+                if (isToday) {
+                    displayDate = '今天';
+                } else if (isYesterday) {
+                    displayDate = '昨天';
+                } else {
+                    displayDate = date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' });
+                }
+
+                html += `
+                    <div class="history-day">
+                        <div class="history-day-header">${displayDate}</div>
+                        <div class="history-day-items">
+                            ${items.map(item => `
+                                <span class="history-day-item" onclick="openVideo('${item.name}')">
+                                    <span class="meal-label">${item.mealName}</span>${item.name}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '<button class="clear-history-btn" onclick="clearHistory()">清空历史记录</button>';
+            container.innerHTML = html;
+        }
+
+        // 清空历史
+        function clearHistory() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                history = [];
+                localStorage.setItem('randomHistory', JSON.stringify(history));
+                renderHistoryPage();
+            }
+        }
+
+        // 随机选择
+        function roll() {
+            if (isRolling || filteredDishNames.length === 0) return;
+            
+            isRolling = true;
+            const result = document.getElementById('result');
+            const resultHint = document.getElementById('resultHint');
+            const videoLinks = document.getElementById('videoLinks');
+            const dishMatchInfo = document.getElementById('dishMatchInfo');
+            const btn = document.getElementById('rollBtn');
+            
+            result.classList.remove('result-clickable');
+            resultHint.classList.add('hidden');
+            videoLinks.classList.add('hidden');
+            dishMatchInfo.classList.add('hidden');
+            result.classList.add('rolling');
+            btn.disabled = true;
+
+            // 滚动效果
+            let count = 0;
+            const maxCount = 20;
+            const interval = setInterval(() => {
+                result.textContent = filteredDishNames[Math.floor(Math.random() * filteredDishNames.length)];
+                count++;
+                
+                if (count >= maxCount) {
+                    clearInterval(interval);
+                    result.classList.remove('rolling');
+                    
+                    // 最终结果 - 从排序后的列表中随机选择（前50%高匹配度的菜）
+                    const topHalf = Math.max(1, Math.floor(filteredDishes.length * 0.5));
+                    const candidateDishes = filteredDishes.slice(0, topHalf);
+                    const finalDish = candidateDishes[Math.floor(Math.random() * candidateDishes.length)];
+                    
+                    result.textContent = finalDish.name;
+                    currentDish = finalDish;
+                    
+                    // 显示匹配信息
+                    showDishMatchInfo(finalDish);
+                    
+                    // 让结果可点击
+                    result.classList.add('result-clickable');
+                    result.onclick = () => openVideo(finalDish.name);
+                    resultHint.classList.remove('hidden');
+                    
+                    // 显示视频链接
+                    updateVideoLinks(finalDish.name);
+                    videoLinks.classList.remove('hidden');
+                    
+                    // 添加到历史
+                    addToHistory(finalDish.name);
+                    
+                    btn.disabled = false;
+                    isRolling = false;
+                }
+            }, 80);
+        }
+
+        // 显示菜品匹配信息
+        function showDishMatchInfo(dish) {
+            const dishMatchInfo = document.getElementById('dishMatchInfo');
+            const matchDishName = document.getElementById('matchDishName');
+            const matchIngredientList = document.getElementById('matchIngredientList');
+            const matchScore = document.getElementById('matchScore');
+            
+            // 分离食材和厨具
+            const selectedFoods = new Set();
+            selectedIngredients.forEach(item => {
+                if (!cookware.includes(item)) {
+                    selectedFoods.add(item);
+                }
+            });
+            
+            // 如果没有选择食材，不显示匹配信息
+            if (selectedFoods.size === 0) {
+                dishMatchInfo.classList.add('hidden');
+                return;
+            }
+            
+            matchDishName.textContent = dish.name;
+            
+            // 生成食材标签
+            const ingredientTags = dish.ingredients.map(ing => {
+                const hasIt = selectedFoods.has(ing);
+                return `<span class="ingredient-tag ${hasIt ? 'have' : 'missing'}">${ing}${hasIt ? ' ✓' : ' ✗'}</span>`;
+            }).join('');
+            
+            matchIngredientList.innerHTML = ingredientTags;
+            
+            // 匹配度
+            const percent = Math.round(dish.matchScore * 100);
+            const matchedCount = dish.matchedCount;
+            const totalCount = dish.ingredients.length;
+            
+            if (dish.matchScore === 1) {
+                matchScore.innerHTML = `🎉 完美匹配！你有所需的全部食材（${matchedCount}/${totalCount}）`;
+                matchScore.style.color = '#28a745';
+            } else if (dish.matchScore >= 0.5) {
+                matchScore.innerHTML = `👍 匹配度 ${percent}%（有 ${matchedCount}/${totalCount} 种食材）`;
+                matchScore.style.color = '#667eea';
+            } else {
+                matchScore.innerHTML = `⚠️ 匹配度 ${percent}%（有 ${matchedCount}/${totalCount} 种食材，缺 ${dish.missingIngredients.join('、')}）`;
+                matchScore.style.color = '#dc3545';
+            }
+            
+            dishMatchInfo.classList.remove('hidden');
+        }
+
+        // 更新视频链接
+        function updateVideoLinks(dishName) {
+            const bilibiliUrl = `https://search.bilibili.com/all?keyword=${encodeURIComponent(dishName + ' 做法')}`;
+            const xiachufangUrl = `https://www.xiachufang.com/search/?keyword=${encodeURIComponent(dishName)}`;
+            
+            document.getElementById('bilibiliLink').href = bilibiliUrl;
+            document.getElementById('xiachufangLink').href = xiachufangUrl;
+        }
+
+        // 打开视频
+        function openVideo(dishName) {
+            const url = `https://search.bilibili.com/all?keyword=${encodeURIComponent(dishName + ' 做法')}`;
+            window.open(url, '_blank');
+        }
+
+        // 添加到历史
+        function addToHistory(item) {
+            const today = new Date().toDateString();
+            history.unshift({
+                name: item,
+                meal: currentMeal,
+                mealName: mealNames[currentMeal],
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                date: today
+            });
+            
+            history = history.slice(0, 20);
+            localStorage.setItem('randomHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        // 渲染历史
+        function renderHistory() {
+            const container = document.getElementById('historyItems');
+            const section = document.getElementById('historySection');
+            const today = new Date().toDateString();
+            
+            const todayHistory = history.filter(h => h.date === today);
+            
+            if (todayHistory.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            container.innerHTML = todayHistory.map(h => 
+                `<span class="history-item" onclick="openVideo('${h.name}')">${h.mealName} ${h.name} (${h.time})</span>`
+            ).join('');
+        }
+
+        // 切换菜单列表显示
+        function toggleMenuList() {
+            const menuList = document.getElementById('menuList');
+            menuList.classList.toggle('hidden');
+        }
+
+        // 渲染菜单标签
+        function renderMenuTags() {
+            const container = document.getElementById('menuTags');
+            container.innerHTML = filteredDishNames.map((item, index) => 
+                `<span class="tag">${item}<span class="remove" onclick="removeMenuItem(${index})">×</span></span>`
+            ).join('');
+        }
+
+        // 添加菜单项
+        function addMenuItem() {
+            const input = document.getElementById('newItem');
+            const value = input.value.trim();
+            
+            if (value && !filteredDishNames.includes(value)) {
+                filteredDishNames.push(value);
+                filteredDishes.push({
+                    name: value,
+                    ingredients: [],
+                    matchedCount: 0,
+                    missingIngredients: [],
+                    matchScore: 0
+                });
+                renderMenuTags();
+                input.value = '';
+                
+                // 更新筛选信息
+                document.getElementById('filteredInfo').innerHTML = 
+                    `已添加自定义菜品，共 <strong>${filteredDishNames.length}</strong> 道菜可选`;
+            }
+        }
+
+        // 删除菜单项
+        function removeMenuItem(index) {
+            filteredDishNames.splice(index, 1);
+            filteredDishes.splice(index, 1);
+            renderMenuTags();
+            
+            document.getElementById('filteredInfo').innerHTML = 
+                `共 <strong>${filteredDishNames.length}</strong> 道菜可选`;
+        }
+
+        // 回车添加
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addMenuItem();
+            }
+        }
+
+        // 初始化
+        loadIngredients();
+        initIngredientTags();
+
+        // 注册 Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
