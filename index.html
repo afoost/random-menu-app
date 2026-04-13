@@ -3,13 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ff6b6b">
+    <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="随机菜单">
     <link rel="manifest" href="manifest.json">
     <title>今天吃什么？</title>
     <style>
+        :root {
+            --primary: #007AFF;
+            --primary-light: #5AC8FA;
+            --primary-dark: #0051D4;
+            --secondary: #34C759;
+            --accent: #FF9F0A;
+            --bg-gradient: linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 50%, #1a1a2e 100%);
+            --bg-wallpaper: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.25) 0%, transparent 60%),
+                            radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.2) 0%, transparent 60%),
+                            linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            --card-bg: rgba(255, 255, 255, 0.72);
+            --card-bg-solid: #ffffff;
+            --text-primary: #1d1c1f;
+            --text-secondary: #86868b;
+            --text-muted: #a1a1a6;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-strong: rgba(0, 0, 0, 0.15);
+            --success: #34C759;
+            --danger: #FF453A;
+            --warning: #FF9F0A;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.18);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.28);
+            --shadow-xl: 0 40px 80px rgba(0, 0, 0, 0.35);
+            --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+            --radius-xs: 6px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+            --radius-window: 16px;
+            --radius-pill: 999px;
+            --blur: blur(24px);
+            --blur-heavy: blur(40px);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,86 +53,203 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-wallpaper);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 40px 20px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
+        /* ===== macOS Window ===== */
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-radius: var(--radius-window);
+            padding: 0;
+            box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,0.1) inset;
             text-align: center;
             max-width: 500px;
             width: 100%;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Traffic Lights */
+        .traffic-lights {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 16px 12px;
+            background: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        .traffic-lights::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(0,0,0,0.06);
+        }
+
+        .light {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .light-red {
+            background: #FF5F57;
+            box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12) inset, 0 0 8px rgba(255, 95, 87, 0.3);
+        }
+        .light-red:hover { background: #FF453A; }
+
+        .light-yellow {
+            background: #FEBC2E;
+            box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12) inset, 0 0 8px rgba(254, 188, 46, 0.3);
+        }
+        .light-yellow:hover { background: #E5A000; }
+
+        .light-green {
+            background: #28C840;
+            box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12) inset, 0 0 8px rgba(40, 200, 64, 0.3);
+        }
+        .light-green:hover { background: #1DB954; }
+
+        .window-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            pointer-events: none;
+            letter-spacing: 0.01em;
+        }
+
+        /* Window Content */
+        .window-content {
+            padding: 32px 36px 36px;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
         }
 
         .subtitle {
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        /* ===== macOS Menu Bar / Section Headers ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         /* 首页餐型选择 */
         .meal-selection {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             margin-top: 20px;
         }
 
         .meal-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 1.3em;
-            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text-primary);
+            border: 1px solid rgba(0,0,0,0.08);
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
         }
 
         .meal-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            background: rgba(0, 122, 255, 0.1);
+            border-color: rgba(0, 122, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.15);
+            color: var(--primary);
         }
 
         .meal-btn:active {
             transform: translateY(0);
+            background: rgba(0, 122, 255, 0.15);
         }
 
         .meal-btn .emoji {
-            font-size: 1.5em;
+            font-size: 1.3em;
+        }
+
+        .meal-btn .arrow {
+            margin-left: auto;
+            opacity: 0.4;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+
+        .meal-btn:hover .arrow {
+            opacity: 0.8;
+            transform: translateX(2px);
         }
 
         /* 食材选择页 */
+        /* ===== Ingredient Section ===== */
         .ingredient-section {
             margin: 20px 0;
             text-align: left;
         }
 
         .ingredient-section h3 {
-            color: #667eea;
-            font-size: 1em;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .ingredient-tags {
@@ -106,32 +259,39 @@
         }
 
         .ingredient-tag {
-            background: #f0f0f0;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            color: #555;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            color: var(--text-primary);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.18s ease;
             user-select: none;
             position: relative;
+            border: 1px solid rgba(0,0,0,0.08);
+            font-weight: 400;
         }
 
         .ingredient-tag:hover {
-            background: #e8e8e8;
+            background: rgba(0, 122, 255, 0.1);
+            border-color: rgba(0, 122, 255, 0.25);
+            color: var(--primary);
         }
 
         .ingredient-tag.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary);
             color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
         }
 
         .ingredient-tag .delete-btn {
             display: none;
             margin-left: 5px;
-            color: #e74c3c;
-            font-weight: bold;
+            color: rgba(0,0,0,0.4);
+            font-weight: 600;
             cursor: pointer;
+            font-size: 0.75em;
         }
 
         .ingredient-tag:hover .delete-btn {
@@ -139,7 +299,11 @@
         }
 
         .ingredient-tag.selected .delete-btn {
-            color: #ffcccc;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .ingredient-tag.selected:hover .delete-btn {
+            color: rgba(255,255,255,0.9);
         }
 
         .add-ingredient {
@@ -150,110 +314,164 @@
 
         .add-ingredient input {
             flex: 1;
-            padding: 8px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 20px;
-            font-size: 0.85em;
+            padding: 9px 14px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
             outline: none;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.6);
+            font-family: inherit;
         }
 
         .add-ingredient input:focus {
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+            background: rgba(255,255,255,0.9);
         }
 
         .add-ingredient button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            padding: 9px 16px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.85em;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .add-ingredient button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
         .selected-count {
-            color: #667eea;
-            font-size: 0.85em;
-            margin-top: 15px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 14px;
+            font-weight: 400;
+            background: rgba(0,0,0,0.03);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: inline-block;
+            align-self: center;
         }
 
+        .selected-count strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* ===== macOS Buttons ===== */
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 15px 50px;
-            font-size: 1.2em;
-            border-radius: 50px;
+            padding: 12px 32px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: var(--radius-pill);
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            margin: 6px;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25), 0 1px 2px rgba(0,0,0,0.1);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.35), 0 2px 4px rgba(0,0,0,0.12);
         }
 
         .btn:active {
             transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 122, 255, 0.2);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.45;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .btn-secondary {
-            background: #f8f9fa;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 10px 30px;
-            font-size: 0.9em;
+            background: rgba(0,0,0,0.05);
+            color: var(--primary);
+            border: 1px solid rgba(0,0,0,0.12);
+            padding: 10px 22px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: none;
+            border-radius: var(--radius-pill);
+            font-family: inherit;
         }
 
         .btn-secondary:hover {
-            background: #667eea;
-            color: white;
+            background: rgba(0, 122, 255, 0.1);
+            border-color: rgba(0, 122, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary:active {
+            background: rgba(0, 122, 255, 0.15);
+            transform: translateY(0);
         }
 
         .btn-back {
             background: transparent;
-            color: #888;
+            color: var(--text-muted);
             border: none;
             padding: 10px 20px;
-            font-size: 0.9em;
+            font-size: 0.88rem;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 18px;
+            transition: all 0.2s;
+            font-family: inherit;
+            border-radius: var(--radius-sm);
         }
 
         .btn-back:hover {
-            color: #667eea;
+            color: var(--primary);
+            background: rgba(0, 122, 255, 0.08);
         }
 
-        /* 随机页面 */
+        /* ===== Roll Result Area ===== */
         .result {
-            font-size: 3em;
-            font-weight: bold;
-            color: #667eea;
-            margin: 30px 0;
-            min-height: 80px;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 24px 0;
+            min-height: 72px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f8f9fa;
-            border-radius: 15px;
+            background: rgba(0,0,0,0.04);
+            border-radius: var(--radius-lg);
             transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.07);
+            padding: 12px 20px;
+            backdrop-filter: blur(10px);
         }
 
         .result.rolling {
-            animation: shake 0.1s infinite;
+            animation: shake 0.08s infinite;
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
         .result-clickable {
@@ -262,55 +480,65 @@
         }
 
         .result-clickable:hover {
-            background: #f0f2ff;
+            background: rgba(0, 122, 255, 0.06);
+            color: var(--primary);
         }
 
         .result-clickable::after {
-            content: '🎬';
-            font-size: 0.4em;
+            content: '▶';
+            font-size: 0.35em;
             margin-left: 10px;
-            opacity: 0.6;
+            opacity: 0.5;
+        }
+
+        .result-clickable:hover::after {
+            opacity: 0.9;
         }
 
         .result-hint {
-            font-size: 0.75em;
-            color: #aaa;
+            font-size: 0.78rem;
+            color: var(--text-muted);
             margin-top: -20px;
             margin-bottom: 20px;
         }
 
         .filtered-info {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.85em;
-            color: #666;
+            background: rgba(0,0,0,0.04);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            margin-bottom: 18px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border: 1px solid rgba(0,0,0,0.06);
+            text-align: left;
         }
 
         .filtered-info strong {
-            color: #667eea;
+            color: var(--primary);
+            font-weight: 600;
         }
 
         .dish-match-info {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin-top: 15px;
+            background: rgba(0,0,0,0.04);
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            margin-top: 16px;
             text-align: left;
-            font-size: 0.85em;
+            font-size: 0.88rem;
+            border: 1px solid rgba(0,0,0,0.07);
         }
 
         .dish-match-info .dish-name {
-            font-weight: bold;
-            color: #333;
-            font-size: 1.1em;
-            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.05rem;
+            margin-bottom: 10px;
         }
 
         .dish-match-info .match-label {
-            color: #888;
-            margin-bottom: 5px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-size: 0.82rem;
         }
 
         .dish-match-info .ingredient-list {
@@ -320,38 +548,48 @@
         }
 
         .dish-match-info .ingredient-tag {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.9em;
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
         }
 
         .dish-match-info .ingredient-tag.have {
-            background: #d4edda;
-            color: #155724;
+            background: rgba(52, 199, 89, 0.15);
+            color: #22863a;
+            border: 1px solid rgba(52, 199, 89, 0.3);
         }
 
         .dish-match-info .ingredient-tag.missing {
-            background: #f8d7da;
-            color: #721c24;
+            background: rgba(255, 69, 58, 0.1);
+            color: #c92a2a;
+            border: 1px solid rgba(255, 69, 58, 0.25);
         }
 
         .dish-match-info .match-score {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #e0e0e0;
-            color: #667eea;
-            font-weight: bold;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.07);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .menu-list {
-            margin-top: 30px;
+            margin-top: 24px;
             text-align: left;
+            background: rgba(0,0,0,0.03);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            border: 1px solid rgba(0,0,0,0.06);
         }
 
         .menu-list h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .tags {
@@ -361,63 +599,85 @@
         }
 
         .tag {
-            background: #f0f0f0;
+            background: rgba(0,0,0,0.06);
             padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            color: #555;
+            border-radius: var(--radius-pill);
+            font-size: 0.83rem;
+            color: var(--text-primary);
+            border: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .tag .remove {
-            margin-left: 5px;
+            margin-left: 4px;
             cursor: pointer;
-            color: #999;
+            color: var(--text-muted);
+            transition: color 0.2s;
+            font-size: 0.75em;
         }
 
         .tag .remove:hover {
-            color: #e74c3c;
+            color: var(--danger);
         }
 
         .add-menu {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
         }
 
         .add-menu input {
             flex: 1;
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            font-size: 0.9em;
+            padding: 9px 14px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.6);
+            font-family: inherit;
         }
 
         .add-menu input:focus {
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+            background: rgba(255,255,255,0.9);
         }
 
         .add-menu button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .add-menu button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
         .history {
-            margin-top: 30px;
+            margin-top: 24px;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid rgba(0,0,0,0.07);
         }
 
         .history h3 {
-            color: #888;
-            font-size: 0.9em;
-            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .history-items {
@@ -428,18 +688,20 @@
         }
 
         .history-item {
-            background: #f8f9fa;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            color: #666;
+            background: rgba(0,0,0,0.05);
+            padding: 5px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.83rem;
+            color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s;
+            border: 1px solid rgba(0,0,0,0.07);
         }
 
         .history-item:hover {
-            background: #f0f2ff;
-            color: #667eea;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            border-color: rgba(0, 122, 255, 0.25);
         }
 
         .hidden {
@@ -447,74 +709,89 @@
         }
 
         .meal-title {
-            color: #667eea;
-            font-size: 1.1em;
-            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
-        /* 荤素选择页 */
+        /* ===== Dish Type Selection ===== */
         .dish-type-section {
-            margin: 30px 0;
+            margin: 24px 0;
         }
 
         .dish-type-options {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         .dish-type-btn {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            padding: 18px 30px;
-            font-size: 1.1em;
-            border-radius: 15px;
+            background: rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 16px 18px;
+            font-size: 0.95rem;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .dish-type-btn:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
+            background: rgba(0, 122, 255, 0.08);
+            border-color: rgba(0, 122, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .dish-type-btn:hover .count {
+            background: var(--primary);
+            color: white;
         }
 
         .dish-type-btn .emoji {
-            font-size: 1.3em;
+            font-size: 1.25em;
         }
 
         .dish-type-btn .label {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .dish-type-btn .desc {
-            font-size: 0.8em;
-            color: #888;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
             margin-top: 2px;
         }
 
         .dish-type-btn .count {
             margin-left: auto;
-            background: #667eea;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
+            background: rgba(0, 122, 255, 0.12);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
         }
 
         .no-result {
-            color: #e74c3c;
-            font-size: 0.9em;
-            margin: 20px 0;
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin: 24px 0;
+            background: rgba(255, 69, 58, 0.08);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 69, 58, 0.15);
         }
 
-        /* 视频链接按钮 */
+        /* ===== Video Links ===== */
         .video-links {
-            margin-top: 15px;
+            margin-top: 14px;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -524,68 +801,77 @@
         .video-link {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85em;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
 
         .video-link.bilibili {
-            background: #fb7299;
-            color: white;
+            background: rgba(251, 114, 153, 0.15);
+            color: #d4445c;
+            border: 1px solid rgba(251, 114, 153, 0.3);
         }
 
         .video-link.xiachufang {
-            background: #ff6b6b;
-            color: white;
+            background: rgba(255, 107, 107, 0.12);
+            color: #c0392b;
+            border: 1px solid rgba(255, 107, 107, 0.25);
         }
 
         .video-link.xiaochufang {
-            background: #ffa502;
-            color: white;
+            background: rgba(255, 165, 2, 0.12);
+            color: #c07800;
+            border: 1px solid rgba(255, 165, 2, 0.25);
         }
 
         .video-link:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            filter: brightness(0.95);
         }
 
         .skip-ingredient {
-            color: #aaa;
-            font-size: 0.85em;
-            margin-top: 15px;
+            color: var(--text-muted);
+            font-size: 0.83rem;
+            margin-top: 14px;
             cursor: pointer;
+            transition: color 0.2s;
+            display: inline-block;
         }
 
         .skip-ingredient:hover {
-            color: #667eea;
+            color: var(--primary);
         }
 
-        /* 历史记录页 */
+        /* ===== History Page ===== */
         .history-page {
             text-align: left;
         }
 
         .history-page h2 {
-            color: #333;
+            color: var(--text-primary);
             margin-bottom: 20px;
             text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
         }
 
         .history-day {
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
+            margin-bottom: 16px;
+            background: rgba(0,0,0,0.04);
+            border-radius: var(--radius-lg);
+            padding: 14px;
+            border: 1px solid rgba(0,0,0,0.07);
         }
 
         .history-day-header {
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 600;
+            color: var(--primary);
             margin-bottom: 10px;
-            font-size: 0.95em;
+            font-size: 0.88rem;
         }
 
         .history-day-items {
@@ -595,71 +881,92 @@
         }
 
         .history-day-item {
-            background: white;
+            background: rgba(255,255,255,0.6);
             padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            color: #555;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s;
+            border: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .history-day-item:hover {
-            background: #667eea;
-            color: white;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            border-color: rgba(0, 122, 255, 0.25);
         }
 
         .history-day-item .meal-label {
-            font-size: 0.75em;
-            opacity: 0.7;
-            margin-right: 5px;
+            font-size: 0.72rem;
+            opacity: 0.6;
+            font-weight: 500;
         }
 
         .no-history {
             text-align: center;
-            color: #aaa;
+            color: var(--text-muted);
             padding: 40px 0;
+            font-size: 0.9rem;
         }
 
         .clear-history-btn {
-            background: #f8f9fa;
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
-            padding: 8px 20px;
-            border-radius: 20px;
+            background: rgba(255, 69, 58, 0.08);
+            color: var(--danger);
+            border: 1px solid rgba(255, 69, 58, 0.2);
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
             cursor: pointer;
-            font-size: 0.85em;
+            font-size: 0.85rem;
             margin-top: 20px;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .clear-history-btn:hover {
-            background: #e74c3c;
+            background: var(--danger);
             color: white;
+            border-color: var(--danger);
         }
 
+        /* ===== Nav Buttons ===== */
         .nav-btn {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
+            top: 14px;
+            right: 14px;
+            background: rgba(0,0,0,0.06);
+            backdrop-filter: blur(10px);
+            color: var(--text-secondary);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 7px 14px;
+            border-radius: var(--radius-pill);
             cursor: pointer;
-            font-size: 0.85em;
+            font-size: 0.78rem;
+            font-weight: 500;
             transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 10;
         }
 
         .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.1);
+            color: var(--text-primary);
         }
 
         .container {
             position: relative;
         }
 
-        /* 搜索页 */
+        /* ===== Search Page ===== */
         .search-page {
             text-align: center;
         }
@@ -672,16 +979,20 @@
 
         .search-box input {
             flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            font-size: 1em;
+            padding: 12px 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.6);
+            font-family: inherit;
         }
 
         .search-box input:focus {
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+            background: rgba(255,255,255,0.9);
         }
 
         .search-results {
@@ -690,98 +1001,119 @@
         }
 
         .search-result-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
+            background: rgba(0,0,0,0.04);
+            padding: 14px;
+            border-radius: var(--radius-md);
             margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.07);
         }
 
         .search-result-item:hover {
-            background: #f0f2ff;
-            transform: translateX(5px);
+            background: rgba(0, 122, 255, 0.07);
+            border-color: rgba(0, 122, 255, 0.2);
         }
 
         .search-result-item .dish-name {
-            font-weight: bold;
-            color: #333;
-            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.98rem;
         }
 
         .search-result-item .dish-links {
             margin-top: 10px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .search-result-item .dish-links a {
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 0.85em;
+            padding: 5px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.8rem;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .quick-search {
-            margin-top: 30px;
+            margin-top: 24px;
             text-align: left;
         }
 
         .quick-search h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .quick-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .quick-tag {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: var(--radius-pill);
             cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s;
+            font-size: 0.88rem;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.08);
         }
 
         .quick-tag:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: rgba(0, 122, 255, 0.1);
+            border-color: rgba(0, 122, 255, 0.25);
+            color: var(--primary);
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 导航按钮 -->
-        <button class="nav-btn hidden" id="historyNavBtn" onclick="goToHistory()">📜 历史记录</button>
-        <button class="nav-btn hidden" id="backNavBtn" onclick="goHome()">← 返回</button>
+        <!-- macOS Window Title Bar with Traffic Lights -->
+        <div class="traffic-lights">
+            <div class="light light-red" onclick="goHome()"></div>
+            <div class="light light-yellow"></div>
+            <div class="light light-green"></div>
+            <span class="window-title">随机菜单</span>
+            <button class="nav-btn hidden" id="historyNavBtn" onclick="goToHistory()">📜 历史</button>
+            <button class="nav-btn hidden" id="backNavBtn" onclick="goHome()">⌫ 返回</button>
+        </div>
+
+        <!-- Window Content -->
+        <div class="window-content">
 
         <!-- 首页：选择餐型 -->
         <div id="homePage">
             <h1>🍽️ 今天吃什么？</h1>
             <p class="subtitle">先选一顿，再让命运决定</p>
-            
+
             <div class="meal-selection">
                 <button class="meal-btn" onclick="selectMeal('breakfast')">
                     <span class="emoji">🌅</span>
                     <span>早餐</span>
+                    <span class="arrow">→</span>
                 </button>
                 <button class="meal-btn" onclick="selectMeal('lunch')">
                     <span class="emoji">☀️</span>
                     <span>中餐</span>
+                    <span class="arrow">→</span>
                 </button>
                 <button class="meal-btn" onclick="selectMeal('dinner')">
                     <span class="emoji">🌙</span>
                     <span>晚餐</span>
+                    <span class="arrow">→</span>
                 </button>
             </div>
 
-            <button class="btn btn-secondary" style="margin-top: 30px;" onclick="goToHistory()">📜 查看历史记录</button>
+            <button class="btn btn-secondary" style="margin-top: 28px;" onclick="goToHistory()">📜 查看历史记录</button>
             <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goToSearch()">🔍 搜索菜谱</button>
         </div>
 
@@ -799,7 +1131,7 @@
                             <div class="label">不限</div>
                             <div class="desc">荤菜素菜都可以</div>
                         </div>
-                        <span class="count" id="countAll">全部</span>
+                        <span class="count" id="countAll">— 道</span>
                     </div>
                     <div class="dish-type-btn" onclick="selectDishType('meat')">
                         <span class="emoji">🥩</span>
@@ -962,7 +1294,8 @@
             
             <button class="btn-back" onclick="goHome()" style="display: block; margin: 20px auto 0;">← 返回首页</button>
         </div>
-    </div>
+    </div><!-- /.window-content -->
+    </div><!-- /.container -->
 
     <script>
         // 食材分类
@@ -2675,19 +3008,39 @@
         // 更新荤/素/全部的菜品数量（按当前选中的餐次）
         function updateDishTypeCounts() {
             const currentDishes = dishData[currentMeal] || [];
-            
+
             const meatDishes = currentDishes.filter(d => isMeatDish(d));
             const vegDishes = currentDishes.filter(d => !isMeatDish(d));
-            
+
+            document.getElementById('countAll').textContent = currentDishes.length + ' 道';
             document.getElementById('countMeat').textContent = meatDishes.length + ' 道';
             document.getElementById('countVegetable').textContent = vegDishes.length + ' 道';
         }
 
         // 判断是否为荤菜（含有肉/鱼/虾/蛋等动物性食材）
         function isMeatDish(dish) {
-            const meatKeywords = ['肉', '鱼', '虾', '蛋', '鸡', '牛', '羊', '猪', '鸭', '蟹', '排骨', '五花肉', '里脊', '鸡翅', '鸡腿', '牛腩', '肉末', '香肠', '腊肠', '午餐肉', '鸭血', '皮蛋'];
-            // 检查所有食材中是否包含荤食关键词
-            return dish.ingredients.some(ing => meatKeywords.some(k => ing.includes(k)));
+            // 先检查 ingredients 数组（已知数据）
+            if (dish.ingredients && dish.ingredients.length > 0) {
+                const meatKeywords = ['肉', '鱼', '虾', '蛋', '鸡', '牛', '羊', '猪', '鸭', '蟹', '排骨', '五花肉', '里脊', '鸡翅', '鸡腿', '牛腩', '肉末', '香肠', '腊肠', '午餐肉', '鸭血', '皮蛋', '蛙'];
+                if (dish.ingredients.some(ing => meatKeywords.some(k => ing.includes(k)))) {
+                    return true;
+                }
+            }
+            // ingredients 为空时，通过菜名判断
+            const name = dish.name;
+            // 海鲜类
+            if (/虾|蟹|鱼|鲫|鲤|鳝|鳗|鲍|螺|蚝|蛤|蚌|蛏|海参|三文|金枪|鳕|龙利|巴沙|虾仁|虾肉|蟹肉/.test(name)) return true;
+            // 畜肉类
+            if (/猪|牛|羊|驴|马|兔/.test(name) && /肉|排|骨|腱|腩|蹄|内脏|杂/.test(name)) return true;
+            // 禽肉类
+            if (/鸡|鸭|鹅|鹌鹑|鸽/.test(name) && /肉|翅|腿|爪|胗|肝|心|脖|块|排|汤|炖|炒|烤|炸|烧/.test(name)) return true;
+            // 蛋类
+            if (/蛋|松花|咸蛋|皮蛋|鹌鹑/.test(name)) return true;
+            // 特定荤菜关键词（无肉字但明确是荤的）
+            if (/肥牛|牛排|牛仔骨|牛腩|牛腱|牛柳|牛百叶|牛肚|牛杂|羊排|羊腿|羊蝎子|羊杂|叉烧|火腿|腊肉|腊肠|香肠|午餐肉|肉松|肉末|肉沫|肉片|肉丝|肉块|肉丸|肉馅|臊子|回锅|红烧|糖醋|酱爆|干煸|干锅|锅仔|水煮|酸菜|泡椒|剁椒|辣子|宫保|鱼香|京酱|叉烧|卤味|卤肉|炖肉|烤肉|烤串|烧烤|火锅|麻辣/.test(name)) return true;
+            // 通用含肉字
+            if (/肉/.test(name)) return true;
+            return false;
         }
 
         // 选择荤素类型
