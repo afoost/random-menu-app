@@ -452,6 +452,60 @@
             margin-bottom: 5px;
         }
 
+        /* 荤素选择页 */
+        .dish-type-section {
+            margin: 30px 0;
+        }
+
+        .dish-type-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .dish-type-btn {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 18px 30px;
+            font-size: 1.1em;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dish-type-btn:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .dish-type-btn .emoji {
+            font-size: 1.3em;
+        }
+
+        .dish-type-btn .label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .dish-type-btn .desc {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .dish-type-btn .count {
+            margin-left: auto;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
         .no-result {
             color: #e74c3c;
             font-size: 0.9em;
@@ -731,6 +785,44 @@
             <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goToSearch()">🔍 搜索菜谱</button>
         </div>
 
+        <!-- 荤素选择页（中餐/晚餐专用） -->
+        <div id="dishTypePage" class="hidden">
+            <p class="meal-title" id="dishTypeMealTitle">☀️ 中餐</p>
+            <h1>🍱 选择菜品类型</h1>
+            <p class="subtitle">想吃荤还是吃素？</p>
+
+            <div class="dish-type-section">
+                <div class="dish-type-options">
+                    <div class="dish-type-btn" onclick="selectDishType('all')">
+                        <span class="emoji">🍽️</span>
+                        <div>
+                            <div class="label">不限</div>
+                            <div class="desc">荤菜素菜都可以</div>
+                        </div>
+                        <span class="count" id="countAll">全部</span>
+                    </div>
+                    <div class="dish-type-btn" onclick="selectDishType('meat')">
+                        <span class="emoji">🥩</span>
+                        <div>
+                            <div class="label">荤菜</div>
+                            <div class="desc">肉、鱼、蛋等动物性食材</div>
+                        </div>
+                        <span class="count" id="countMeat">0 道</span>
+                    </div>
+                    <div class="dish-type-btn" onclick="selectDishType('vegetable')">
+                        <span class="emoji">🥬</span>
+                        <div>
+                            <div class="label">素菜</div>
+                            <div class="desc">不含肉，以蔬菜豆制品为主</div>
+                        </div>
+                        <span class="count" id="countVegetable">0 道</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-back" onclick="goHome()">← 返回选择餐型</button>
+        </div>
+
         <!-- 食材选择页 -->
         <div id="ingredientPage" class="hidden">
             <p class="meal-title" id="ingredientMealTitle">🌅 早餐</p>
@@ -786,7 +878,7 @@
 
             <button class="btn" id="startRollBtn" onclick="goToRoll()" disabled>🎲 开始随机</button>
             <p class="skip-ingredient" onclick="skipIngredient()">跳过，直接随机 →</p>
-            <button class="btn-back" onclick="goHome()">← 返回选择餐型</button>
+            <button class="btn-back" onclick="goBackFromIngredient()">← 返回</button>
         </div>
 
         <!-- 随机页面 -->
@@ -1343,11 +1435,51 @@
             document.querySelectorAll('.ingredient-tag').forEach(tag => tag.classList.remove('selected'));
             updateSelectedCount();
             
-            // 切换页面
+            // 中餐/晚餐需要先选荤素，早餐直接进食材选择
+            if (meal === 'breakfast') {
+                currentDishType = 'all';
+                document.getElementById('homePage').classList.add('hidden');
+                document.getElementById('ingredientPage').classList.remove('hidden');
+                document.getElementById('historyNavBtn').classList.add('hidden');
+                document.getElementById('backNavBtn').classList.remove('hidden');
+            } else {
+                // 更新各类型数量显示
+                updateDishTypeCounts();
+                document.getElementById('dishTypeMealTitle').textContent = mealNames[meal];
+                document.getElementById('homePage').classList.add('hidden');
+                document.getElementById('dishTypePage').classList.remove('hidden');
+                document.getElementById('historyNavBtn').classList.add('hidden');
+                document.getElementById('backNavBtn').classList.remove('hidden');
+            }
+        }
+
+        // 记录当前荤素筛选类型
+        let currentDishType = 'all';
+
+        // 更新荤/素/全部的菜品数量（按当前选中的餐次）
+        function updateDishTypeCounts() {
+            const currentDishes = dishData[currentMeal] || [];
+            
+            const meatDishes = currentDishes.filter(d => isMeatDish(d));
+            const vegDishes = currentDishes.filter(d => !isMeatDish(d));
+            
+            document.getElementById('countMeat').textContent = meatDishes.length + ' 道';
+            document.getElementById('countVegetable').textContent = vegDishes.length + ' 道';
+        }
+
+        // 判断是否为荤菜（含有肉/鱼/虾/蛋等动物性食材）
+        function isMeatDish(dish) {
+            const meatKeywords = ['肉', '鱼', '虾', '蛋', '鸡', '牛', '羊', '猪', '鸭', '蟹', '排骨', '五花肉', '里脊', '鸡翅', '鸡腿', '牛腩', '肉末', '香肠', '腊肠', '午餐肉', '鸭血', '皮蛋'];
+            // 检查所有食材中是否包含荤食关键词
+            return dish.ingredients.some(ing => meatKeywords.some(k => ing.includes(k)));
+        }
+
+        // 选择荤素类型
+        function selectDishType(type) {
+            currentDishType = type;
             document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('dishTypePage').classList.add('hidden');
             document.getElementById('ingredientPage').classList.remove('hidden');
-            document.getElementById('historyNavBtn').classList.add('hidden');
-            document.getElementById('backNavBtn').classList.remove('hidden');
         }
 
         // 跳过食材选择
@@ -1431,7 +1563,19 @@
 
         // 筛选菜品
         function filterDishes() {
-            const allDishes = dishData[currentMeal];
+            let allDishes;
+            
+            if (currentMeal === 'breakfast') {
+                allDishes = dishData[currentMeal];
+            } else {
+                // 中餐/晚餐：使用对应餐次的菜品，再按荤素类型过滤
+                allDishes = [...dishData[currentMeal]];
+                if (currentDishType === 'meat') {
+                    allDishes = allDishes.filter(d => isMeatDish(d));
+                } else if (currentDishType === 'vegetable') {
+                    allDishes = allDishes.filter(d => !isMeatDish(d));
+                }
+            }
             
             // 分离食材和厨具
             const selectedFoods = new Set();
@@ -1500,10 +1644,12 @@
             document.getElementById('rollPage').classList.add('hidden');
             document.getElementById('historyPage').classList.add('hidden');
             document.getElementById('searchPage').classList.add('hidden');
+            document.getElementById('dishTypePage').classList.add('hidden');
             document.getElementById('historyNavBtn').classList.add('hidden');
             document.getElementById('backNavBtn').classList.add('hidden');
             currentMeal = null;
             currentDish = null;
+            currentDishType = 'all';
         }
 
         // 返回食材选择
@@ -1513,6 +1659,16 @@
             document.getElementById('menuList').classList.add('hidden');
             document.getElementById('historyNavBtn').classList.add('hidden');
             document.getElementById('backNavBtn').classList.remove('hidden');
+        }
+
+        // 从食材选择页返回（中餐/晚餐返回荤素页，早餐返回首页）
+        function goBackFromIngredient() {
+            if (currentMeal === 'breakfast') {
+                goHome();
+            } else {
+                document.getElementById('ingredientPage').classList.add('hidden');
+                document.getElementById('dishTypePage').classList.remove('hidden');
+            }
         }
 
         // 历史记录页
